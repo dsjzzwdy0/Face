@@ -8,12 +8,17 @@ import numpy as np
 from conf import settings
 
 
-#定义处理类型
+# 定义处理类型
 class IndexHandler(tornado.web.RequestHandler):
-    #添加一个处理get请求方式的方法
+    # 添加一个处理get请求方式的方法
     def get(self):
-        #向响应中，添加数据
-        self.write('好看的皮囊千篇一律，有趣的灵魂万里挑一。')
+        self.set_header("Content-Type", "image/jpeg")
+        imagepath = os.path.join('d:/Python/images/trump.jpg')  # 图片路径
+        with open(imagepath, 'rb') as f:
+            image_data = f.read()
+        # 向响应中，添加数据
+        # self.write('好看的皮囊千篇一律，有趣的灵魂万里挑一。')
+        self.write(image_data)
 
 
 class FaceDetectHandler(tornado.web.RequestHandler):
