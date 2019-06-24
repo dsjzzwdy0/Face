@@ -1,5 +1,5 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 
-conf = {}
+conf = dict()
 conf['port'] = 8000
 
