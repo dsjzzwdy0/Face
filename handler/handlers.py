@@ -9,6 +9,8 @@ from models import dbSession
 from models.face_info import FaceInfo
 from models.result_warpper import *
 import json
+import io
+from PIL import Image
 
 
 def get_image_content_type(format):
@@ -18,6 +20,12 @@ def get_image_content_type(format):
         return 'image/png'
     else:
         return 'image/jpeg'
+
+
+def get_byte_array(image, format='png'):
+    img_byte_arr = io.BytesIO()  # 创建一个空的Bytes对象
+    image.save(img_byte_arr, format=format)  # PNG就是图片格式，我试过换成JPG/jpg都不行
+    return img_byte_arr.getvalue()  # 这个就是保存的图片字节流
 
 
 class BaseHandler(tornado.web.RequestHandler, SessionMixin):
@@ -45,6 +53,13 @@ class IndexHandler(BaseHandler):
 
         # self.write('好看的皮囊千篇一律，有趣的灵魂万里挑一。')
         self.write(image_data)
+
+
+class FaceHandler(BaseHandler):
+    def get(self):
+        image = Image.open('d:/Python/images/maps.png')
+        self.set_header("Content-Type", "image/png")
+        self.write(get_byte_array(image))
 
 
 class FacePicture(BaseHandler):
@@ -147,7 +162,8 @@ def create_urls():
         # (r'/json', handlers.JsonHandler),
         (r'/detect', FaceDetectHandler),
         (r'/regist', RegistHandler),
-        (r'/getpic', FacePicture)
+        (r'/getpic', FacePicture),
+        (r'/face', FaceHandler)
     ]
     return urls;
 
