@@ -8,6 +8,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from conf import settings
+import pymysql
 
 
 # 连接数据库的数据
