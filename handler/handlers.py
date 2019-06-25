@@ -113,7 +113,7 @@ class RegistHandler(BaseHandler):
         name = self.get_body_argument('name', 'test01')
 
         if meta == None:
-            result = failure("There are no face detected.")
+            result = failure("Error, there is no image file uploaded.")
             return self.response_json(result)
         else:
             # filename = meta['filename']
