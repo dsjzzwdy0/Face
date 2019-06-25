@@ -118,6 +118,10 @@ class RegistHandler(BaseHandler):
         else:
             # filename = meta['filename']
             bytes = meta['body']
+            if (len(bytes) > 65 * 1024):
+                result = failure("Error, the file image is > 65k, can't processed.")
+                return self.response_json(result)
+            
             format = '.jpg'
             face = FaceInfo()
             face.format = format
