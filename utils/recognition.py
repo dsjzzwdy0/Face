@@ -1,9 +1,32 @@
 # coding=utf-8
 import face_recognition
 import cv2
+import io
+from PIL import Image
 import numpy as np
 from models import dbSession
 from models.face_info import FaceInfo
+
+
+def get_byte_array(image, format='png'):
+    img_byte_arr = io.BytesIO()                     # 创建一个空的Bytes对象
+    image.save(img_byte_arr, format=format)         # PNG就是图片格式，我试过换成JPG/jpg都不行
+    return img_byte_arr.getvalue()                  # 这个就是保存的图片字节流
+
+
+def cv2_decode_byte_array(bytes):
+    image = np.asarray(bytearray(bytes), dtype="uint8")     #转换成图像
+    image = cv2.imdecode(image, 0)
+    return image
+
+
+def pil_decode_byte_array(bytes):
+    # image_byte_arr = io.BytesIO()
+    # image = bytes(bytes)
+    print (bytes)
+    image = np.asarray(bytes, dtype="uint8")     #转换成图像
+    # image = Image.fromarray(np.uint8(image))
+    return image
 
 
 class FaceRecognizer:
@@ -16,18 +39,26 @@ class FaceRecognizer:
         self.face = Face(width, height)
         self.db = dbSession
         self.faces = dict()
+        self.know_faces = []
+        self.labels = []
         self.initialize()
 
     def initialize(self):
         print('初始化人脸识别程序')
         face_infos = self.db.query(FaceInfo).all()
         for face_info in face_infos:
-            print("标识号：", face_info.id)
-            self.faces[face_info.id] = face_info
+            # self.faces[face_info.id] = face_info
+            self.add_face(face_info)
 
     def add_face(self, face_info):
-        pass
+        print("标识号：", face_info.id)
+        image = pil_decode_byte_array(face_info.facebytes)
+        image = face_recognition.face_encodings(image)[0]
+        self.know_faces.append(image)
+        self.labels.append(face_info.id)
 
+    def close(self):
+        self.db.close()
 
 
 class Face:

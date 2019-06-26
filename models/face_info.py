@@ -11,7 +11,7 @@ Base = declarative_base(engine)
 # 定义好一些属性，与user表中的字段进行映射，并且这个属性要属于某个类型
 
 class FaceInfo(Base):
-    __tablename__ = 'face_info'
+    __tablename__ = 'face_info_python'
     id = Column(Integer, primary_key=True)
     userid = Column(String(30))
     name = Column(String(32))

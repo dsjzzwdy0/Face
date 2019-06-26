@@ -1,20 +1,11 @@
 #-*- coding:utf-8 -*-
 import tornado.web
-from tornado import httputil
-from tornado.escape import json_decode, json_encode, utf8
 import os
-import cv2
-import numpy as np
 from pycket.session import SessionMixin
-from models import dbSession
-from models.face_info import FaceInfo
 from models.result_warpper import *
 import json
-import io
 from PIL import Image
-
-
-
+from utils.recognition import *
 
 
 def get_image_content_type(format):
@@ -24,12 +15,6 @@ def get_image_content_type(format):
         return 'image/png'
     else:
         return 'image/jpeg'
-
-
-def get_byte_array(image, format='png'):
-    img_byte_arr = io.BytesIO()                     # 创建一个空的Bytes对象
-    image.save(img_byte_arr, format=format)         # PNG就是图片格式，我试过换成JPG/jpg都不行
-    return img_byte_arr.getvalue()                  # 这个就是保存的图片字节流
 
 
 class BaseHandler(tornado.web.RequestHandler, SessionMixin):
@@ -153,11 +138,11 @@ class FaceRegistHandler(BaseHandler):
         else:
             # filename = meta['filename']
             bytes = meta['body']
-            if (len(bytes) > 65 * 1024):
+            if  len(bytes) > 65 * 1024:
                 result = failure("Error, the file image is > 65k, can't processed.")
                 return self.response_json(result)
 
-            format = '.jpg'
+            format = '.png'
             face = FaceInfo()
             face.format = format
             face.userid = userid
