@@ -142,6 +142,12 @@ class FaceRegistHandler(BaseHandler):
                 result = failure("Error, the file image is > 65k, can't processed.")
                 return self.response_json(result)
 
+            image = cv2_decode_byte_array(bytes)
+            if image is None:
+                print("Failure image data")
+                result = filter("Failure image data")
+                return self.response_json(result)
+
             format = '.png'
             face = FaceInfo()
             face.format = format

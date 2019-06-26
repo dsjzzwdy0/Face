@@ -16,7 +16,7 @@ def get_byte_array(image, format='png'):
 
 def cv2_decode_byte_array(bytes):
     image = np.asarray(bytearray(bytes), dtype="uint8")     #转换成图像
-    image = cv2.imdecode(image, 0)
+    image = cv2.imdecode(image, cv2.COLOR_RGBA2BGR)
     return image
 
 
@@ -52,7 +52,12 @@ class FaceRecognizer:
 
     def add_face(self, face_info):
         print("标识号：", face_info.id)
-        image = pil_decode_byte_array(face_info.facebytes)
+        image = cv2_decode_byte_array(face_info.facebytes)
+        # cv2.imshow('Test', image)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+        # image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        image = np.array(image)
         image = face_recognition.face_encodings(image)[0]
         self.know_faces.append(image)
         self.labels.append(face_info.id)
