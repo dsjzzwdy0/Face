@@ -15,6 +15,7 @@ class FaceRecognizer:
         self.height = height
         self.face = Face(width, height)
         self.db = dbSession
+        self.faces = dict()
         self.initialize()
 
     def initialize(self):
@@ -22,6 +23,11 @@ class FaceRecognizer:
         face_infos = self.db.query(FaceInfo).all()
         for face_info in face_infos:
             print("标识号：", face_info.id)
+            self.faces[face_info.id] = face_info
+
+    def add_face(self, face_info):
+        pass
+
 
 
 class Face:
