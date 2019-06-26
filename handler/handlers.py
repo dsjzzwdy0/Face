@@ -1,5 +1,6 @@
 #-*- coding:utf-8 -*-
 import tornado.web
+from tornado import httputil
 from tornado.escape import json_decode, json_encode, utf8
 import os
 import cv2
@@ -13,6 +14,9 @@ import io
 from PIL import Image
 
 
+
+
+
 def get_image_content_type(format):
     if format == '.jpg' or format == 'jpg':
         return 'image/jpeg'
@@ -23,15 +27,15 @@ def get_image_content_type(format):
 
 
 def get_byte_array(image, format='png'):
-    img_byte_arr = io.BytesIO()  # 创建一个空的Bytes对象
-    image.save(img_byte_arr, format=format)  # PNG就是图片格式，我试过换成JPG/jpg都不行
-    return img_byte_arr.getvalue()  # 这个就是保存的图片字节流
+    img_byte_arr = io.BytesIO()                     # 创建一个空的Bytes对象
+    image.save(img_byte_arr, format=format)         # PNG就是图片格式，我试过换成JPG/jpg都不行
+    return img_byte_arr.getvalue()                  # 这个就是保存的图片字节流
 
 
 class BaseHandler(tornado.web.RequestHandler, SessionMixin):
     def initialize(self):
         self.db = dbSession
-        # print ("-----------initialize方法---------")
+        print ("-----------initialize方法---------")
 
     def on_finish(self):
         self.db.close()
@@ -116,7 +120,23 @@ class MainHandler(BaseHandler):
         self.render("index.html", list_info = [11,22,33])
 
 
-class RegistHandler(BaseHandler):
+class FaceRecognizeHandler(BaseHandler):
+    '''
+    人脸识别类
+    '''
+    def initialize(self):
+        BaseHandler.initialize(self)
+        print('初始化方法')
+        print ('initialize the face recognize handler.')
+
+    def get(self):
+        self.render("recognize.html")
+
+    def post(self):
+        meta = self.request.files['file'][0]
+
+
+class FaceRegistHandler(BaseHandler):
     def get(self):
         # user = self.get_query_argument("user", "test")
         # print("User name is", user)
@@ -157,22 +177,12 @@ class RegistHandler(BaseHandler):
 
 def create_urls():
     urls = [
-        (r'/', IndexHandler),
-        (r'/index', MainHandler),
-        # (r'/json', handlers.JsonHandler),
-        (r'/detect', FaceDetectHandler),
-        (r'/regist', RegistHandler),
-        (r'/getpic', FacePicture),
+        (r'/', IndexHandler),                       # 首页面
+        (r'/index', MainHandler),                   #
+        (r'/detect', FaceDetectHandler),            # 人脸检测测试接口
+        (r'/regist', FaceRegistHandler),            # 人脸注册接口
+        (r'/recognize', FaceRecognizeHandler),      # 人脸识别接口
+        (r'/getpic', FacePicture),                  # 人脸图像数据页面
         (r'/face', FaceHandler)
     ]
     return urls;
-
-'''
-class JsonHandler(tornado.web.RequestHandler):
-    def get(self):
-        pythonStr = {}
-        self.set_header("Content-Type", "application/json; charset=UTF-8")
-        student = Student()
-        json_str = json.dumps(student.__dict__)
-        self.finish(json_str)
-'''
