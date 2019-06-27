@@ -3,9 +3,16 @@ import tornado.web
 import os
 from pycket.session import SessionMixin
 from models.result_warpper import *
+from models.face_info import *
 import json
-from PIL import Image
 from utils.recognition import *
+
+
+WIDTH = 128
+HEIGHT = 128
+IMAGE_FORMAT = '.png'
+face_detector = FaceDetector(WIDTH, HEIGHT)
+face_recognizer = FaceRecognizer(face_detector)
 
 
 def get_image_content_type(format):
@@ -17,14 +24,74 @@ def get_image_content_type(format):
         return 'image/jpeg'
 
 
+def create_face_info(rawimage, userid, name):
+    '''
+    创建头像信息数据
+    :param rawimage: 原始人脸图像
+    :param userid: 用户编号
+    :param name: 用户名称
+    :return: 人脸对象数据
+    '''
+    face_img, shape = face_detector.get_normalize_face(rawimage)
+    print(face_img)
+    if face_img is None or shape is None:
+        return None
+
+    face = FaceInfo()
+    face.format = IMAGE_FORMAT
+    face.userid = userid
+    face.name = name
+    face.width = shape[0]
+    face.height = shape[1]
+    face.channel = shape[2]
+    face.facebytes = get_face_image_byte(face_img)
+    return face
+
+
+def create_face_feature(face):
+    '''
+    创建人脸特征数据对象
+    :param face: 人脸信息
+    :return: 人脸特征对象
+    '''
+    if face.facebytes is None:
+        return None;
+
+    if face.width <= 0 or face.height <= 0 or face.channel <= 0:
+        return None;
+
+    # shape = (face.width, face.height, face.channel)
+    face_image = cv2_decode_byte_array(face.facebytes)
+
+    # 人脸特征提取
+    face_feature = face_detector.encode_face_feature(face_image)
+    if face_feature is None:
+        return None;
+
+    feature = FeatureInfo()
+    feature.faceid = face.id
+    feature.userid = face.userid
+    feature.features = face_feature             # 人脸特征属性
+    return feature
+
+
 class BaseHandler(tornado.web.RequestHandler, SessionMixin):
     def initialize(self):
         self.db = dbSession
-        print ("-----------initialize方法---------")
+        # print ("-----------initialize方法---------")
 
     def on_finish(self):
         self.db.close()
         # print ("-------------on_finish方法----------------")
+
+    def add_model(self, model):
+        try:
+            self.db.add(model)
+            self.db.commit()
+            return True
+        except Exception as e:
+            print(e)
+            return False
 
     def response_json(self, result):
         self.set_header('Content-type', 'application/json')
@@ -107,18 +174,38 @@ class MainHandler(BaseHandler):
 
 class FaceRecognizeHandler(BaseHandler):
     '''
-    人脸识别类
+    人脸识别
     '''
-    def initialize(self):
-        BaseHandler.initialize(self)
-        print('初始化方法')
-        print ('initialize the face recognize handler.')
-
     def get(self):
         self.render("recognize.html")
 
     def post(self):
         meta = self.request.files['file'][0]
+
+        if meta is None:
+            result = failure("Error, there is no image file uploaded.")
+            return self.response_json(result)
+
+        bytes = meta['body']
+        image = cv2_decode_byte_array(bytes)
+        if image is None:
+            print("Failure image data")
+            result = failure("Failure image data")
+            return self.response_json(result)
+
+        # 识别人脸
+        feature = face_recognizer.predict(image)
+        if feature is None:
+            print("Failure to predict the face image.")
+            result = failure("Failure to predict the face image.")
+            return self.response_json(result)
+
+        data = {}
+        data['id'] = feature.faceid
+        data['userid'] = feature.userid
+        data['name'] = 'test'
+        result = ok_data(data)
+        return self.response_json(result)
 
 
 class FaceRegistHandler(BaseHandler):
@@ -132,39 +219,49 @@ class FaceRegistHandler(BaseHandler):
         userid = self.get_body_argument('userid', '001')
         name = self.get_body_argument('name', 'test01')
 
-        if meta == None:
+        if meta is None:
             result = failure("Error, there is no image file uploaded.")
             return self.response_json(result)
         else:
-            # filename = meta['filename']
             bytes = meta['body']
-            if  len(bytes) > 65 * 1024:
+            '''if len(bytes) > 65 * 1024:
                 result = failure("Error, the file image is > 65k, can't processed.")
                 return self.response_json(result)
-
+            '''
             image = cv2_decode_byte_array(bytes)
             if image is None:
                 print("Failure image data")
-                result = filter("Failure image data")
+                result = failure("Failure image data")
                 return self.response_json(result)
 
-            format = '.png'
-            face = FaceInfo()
-            face.format = format
-            face.userid = userid
-            face.name = name
-            face.facebytes = bytes
+            face = create_face_info(image, userid, name)
+            if face is None:
+                print("There are no face detected in the image file")
+                result = failure("There are no face detected in the image file")
+                return self.response_json(result)
 
-            self.db.add(face)
-            self.db.commit()
+            if self.add_model(face):
+                #print('Face {}, {}, {}'.format(face.id, face.userid, face.name))
+                feature = create_face_feature(face)
+                if feature is None or not self.add_model(feature):
+                    print("There are no face detected in the image file or error occured when save feature.")
+                    result = failure("There are no face detected in the image file or error occured when save feature.")
+                    return self.response_json(result)
 
-            # face.facebytes = None
-            data = {}
-            data['id'] = face.id
-            data['userid'] = face.userid
-            data['name'] = face.name
-            result = ok_data(data)
+                # print('Feature {}, {}, {}'.format(feature.id, feature.faceid, feature.userid))
+                # face.facebytes = None
+                face_recognizer.add_feature(feature)        #添加人脸特征数据
+
+                data = {}
+                data['id'] = face.id
+                data['userid'] = face.userid
+                data['name'] = face.name
+                result = ok_data(data)
+            else:
+                result = failure('Error occured when save in database')
+
             return self.response_json(result)
+
 
 def create_urls():
     urls = [

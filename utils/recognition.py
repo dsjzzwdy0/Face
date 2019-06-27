@@ -5,68 +5,125 @@ import io
 from PIL import Image
 import numpy as np
 from models import dbSession
-from models.face_info import FaceInfo
+from models.face_info import *
+import time
+import matplotlib.pyplot as plt
 
 
 def get_byte_array(image, format='png'):
+    '''
+    将图像数据(这里是PIL Image格式)转存为字节数组
+    :param image: 原始图像数据
+    :param format: 图像格式，PNG就是图片格式，我试过换成JPG/jpg都不行
+    :return: 字节数据
+    '''
     img_byte_arr = io.BytesIO()                     # 创建一个空的Bytes对象
     image.save(img_byte_arr, format=format)         # PNG就是图片格式，我试过换成JPG/jpg都不行
     return img_byte_arr.getvalue()                  # 这个就是保存的图片字节流
 
 
 def cv2_decode_byte_array(bytes):
-    image = np.asarray(bytearray(bytes), dtype="uint8")     #转换成图像
+    '''
+    从客户端POST上来的图像文件进行图像解码
+    :param bytes: 图像字节数组数据
+    :return: cv2 支持的图像数据
+    '''
+    image = np.asarray(bytearray(bytes), dtype=np.uint8)     #转换成图像
     image = cv2.imdecode(image, cv2.COLOR_RGBA2BGR)
     return image
 
 
-def pil_decode_byte_array(bytes):
-    # image_byte_arr = io.BytesIO()
-    # image = bytes(bytes)
-    print (bytes)
-    image = np.asarray(bytes, dtype="uint8")     #转换成图像
-    # image = Image.fromarray(np.uint8(image))
-    return image
+def decode_byte_array(bytes, shape):
+    '''
+    字节数组转成图像
+    :param bytes: 字节数组
+    :param shape: 形状数据
+    :return: 影像数据
+    '''
+    face_img = np.array(bytearray(bytes), dtype="uint8").reshape(shape[0], shape[1], shape[2])
+    return face_img
+
+
+def get_face_image_byte(face_image):
+    '''
+    将自动识别出的人脸图像数据转换成图像字节数组
+    字节数组的格式为PNG格式
+    :param face_image: 识别出的人脸数据 np.ndarray
+    :return: 字节数组数据
+    '''
+    face_img = Image.fromarray(cv2.cvtColor(face_image, cv2.COLOR_BGR2RGB))
+    return get_byte_array(face_img)
 
 
 class FaceRecognizer:
     '''
     人脸识别检测类
     '''
-    def __init__(self, width=128, height=128):
+    def __init__(self, face=None, width=128, height=128):
         self.width = width
         self.height = height
-        self.face = Face(width, height)
+        self.face = face
         self.db = dbSession
-        self.faces = dict()
+        self.features = []
         self.know_faces = []
-        self.labels = []
         self.initialize()
 
     def initialize(self):
-        print('初始化人脸识别程序')
-        face_infos = self.db.query(FaceInfo).all()
-        for face_info in face_infos:
-            # self.faces[face_info.id] = face_info
-            self.add_face(face_info)
+        '''
+        从数据库中初始化人脸特征库
+        :return:
+        '''
+        print('从geoqs(face_feature_info)中初始化已知人脸数据库...')
+        feature_infos = self.db.query(FeatureInfo).all()
+        for feature_into in feature_infos:
+            self.add_feature(feature_into)
 
-    def add_face(self, face_info):
-        print("标识号：", face_info.id)
-        image = cv2_decode_byte_array(face_info.facebytes)
-        # cv2.imshow('Test', image)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-        # image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        image = np.array(image)
-        image = face_recognition.face_encodings(image)[0]
-        self.know_faces.append(image)
-        self.labels.append(face_info.id)
+    def add_feature(self, feature_info):
+        '''
+        加入到人脸特征库中
+        :param feature_info: 特征数据
+        :return: 无
+        '''
+        if feature_info is None:
+            return
+
+        self.features.append(feature_info)
+        self.know_faces.append(np.frombuffer(feature_info.features))
+        # print('Features: is ')
+        # print(np.frombuffer(feature_info.features))
+
+    def remove_feature(self, index):
+        '''
+        删除某个序号下的元素
+        :param index: 序号
+        :return: 无
+        '''
+        if len(self.labels) <= index or len(self.know_faces) <= index:
+            return
+        else:
+            del self.labels[index]
+            del self.know_faces[index]
+
+    def predict(self, unknow_image):
+        '''
+        检测人脸图像
+        :param unknow_image: 未分类的人脸数据
+        :return:
+        '''
+        unknow_feature = self.face.encode_face_feature(unknow_image)
+        results = face_recognition.compare_faces(self.know_faces, unknow_feature)
+        # print(results)
+
+        for i in range(0, len(results)):
+            if results[i]:
+                return self.features[i]
+        return None
 
     def close(self):
         self.db.close()
 
 
-class Face:
+class FaceDetector:
     '''
     人脸检测与识别的类
     '''
@@ -76,17 +133,30 @@ class Face:
 
     @staticmethod
     def find_face_locations(image):
+        '''
+        查找人脸所在的图像的位置
+        :param image: 图像数据
+        :return: 人脸所在图像的位置,位置是一个列表
+        '''
         return face_recognition.face_locations(image)
 
+    def encode_face_feature(self, face_image):
+        return face_recognition.face_encodings(face_image)[0]
+
     def find_main_face_location(self, image):
-        face_locations = Face.find_face_locations(image)
+        '''
+        识别人脸数据，如果一张图片中有多张人脸，则只返回最主要的人脸
+        :param image: 包含人脸的图像数据
+        :return: 人脸图像
+        '''
+        face_locations = FaceDetector.find_face_locations(image)
         size = len(face_locations)
 
         if size <= 0:
             return None
 
         location = None
-        for face_location in face_locations:
+        for face_location in face_locations:            #确定最大的人脸图像区域
             if location is None :
                 location = face_location
                 continue
@@ -99,17 +169,23 @@ class Face:
             width1 = right1 - left1
             height1 = bottom1 - top1
 
+            # 按照确定的面积最大的区域
             if width0 * height0 > width1 * height1:
                 location = face_location
 
         return location
 
     def get_normalize_face(self, image):
+        '''
+        获得标准化的人脸图像及人脸尺
+        :param image: 包含人脸的图像数据
+        :return: 人脸图像数据、图像尺寸数据
+        '''
         location = self.find_main_face_location(image)
         if location is not None:
             (top, right, bottom, left) = location
             face_image = image[top:bottom, left:right]
             face_image = cv2.resize(face_image, (self.width, self.height), cv2.INTER_LINEAR)
-            return face_image
+            return face_image, face_image.shape
         else:
-            return None
+            return None, None
