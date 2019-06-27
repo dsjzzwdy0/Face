@@ -9,27 +9,27 @@ from models import dbSession
 Base = declarative_base(engine)
 
 
-# 定义好一些属性，与user表中的字段进行映射，并且这个属性要属于某个类型
-class FaceInfo(Base):
+class FeatureInfo(Base):
     __tablename__ = 'face_info'
     id = Column(Integer, primary_key=True)
     userid = Column(String(30))
     name = Column(String(32))
+    features = Column(BLOB)
+
+# 定义好一些属性，与user表中的字段进行映射，并且这个属性要属于某个类型
+class FaceInfo(FeatureInfo):
+    #__tablename__ = 'face_info'
+    #id = Column(Integer, primary_key=True)
+    #userid = Column(String(30))
+    #name = Column(String(32))
     format = Column(String(10))
     width = Column(Integer)
     height = Column(Integer)
     channel = Column(Integer)
     facebytes = Column(BLOB)
+    #features = Column(BLOB)
 
     # 可以在类里面写别的方法,类似查询方法
     @classmethod
     def all(cls):
         return dbSession.query(cls).all()
-
-
-class FeatureInfo(Base):
-    __tablename__ = 'face_feature_info'
-    id = Column(Integer, primary_key=True)
-    faceid = Column(Integer)
-    userid = Column(String(30))
-    features = Column(BLOB)

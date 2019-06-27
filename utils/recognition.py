@@ -4,10 +4,7 @@ import cv2
 import io
 from PIL import Image
 import numpy as np
-from models import dbSession
 from models.face_info import *
-import time
-import matplotlib.pyplot as plt
 
 
 def get_byte_array(image, format='png'):
@@ -59,9 +56,10 @@ class FaceRecognizer:
     '''
     人脸识别检测类
     '''
-    def __init__(self, face=None, width=128, height=128):
+    def __init__(self, face=None, tolerance=0.6, width=128, height=128):
         self.width = width
         self.height = height
+        self.tolerance = tolerance
         self.face = face
         self.db = dbSession
         self.features = []
@@ -98,10 +96,10 @@ class FaceRecognizer:
         :param index: 序号
         :return: 无
         '''
-        if len(self.labels) <= index or len(self.know_faces) <= index:
+        if len(self.features) <= index or len(self.know_faces) <= index:
             return
         else:
-            del self.labels[index]
+            del self.features[index]
             del self.know_faces[index]
 
     def predict(self, unknow_image):
@@ -111,12 +109,18 @@ class FaceRecognizer:
         :return:
         '''
         unknow_feature = self.face.encode_face_feature(unknow_image)
-        results = face_recognition.compare_faces(self.know_faces, unknow_feature)
-        # print(results)
+        dist = face_recognition.face_distance(self.know_faces, unknow_feature)
+        print(dist)
 
-        for i in range(0, len(results)):
-            if results[i]:
-                return self.features[i]
+        min_dist = 100000
+        index = -1
+        for i in range(0, len(dist)):
+            if dist[i] < min_dist:
+                min_dist = dist[i]
+                index = i
+
+        if min_dist < self.tolerance :
+            return self.features[index]
         return None
 
     def close(self):

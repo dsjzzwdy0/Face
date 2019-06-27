@@ -33,9 +33,14 @@ def create_face_info(rawimage, userid, name):
     :return: 人脸对象数据
     '''
     face_img, shape = face_detector.get_normalize_face(rawimage)
-    print(face_img)
+    # print(face_img)
     if face_img is None or shape is None:
         return None
+
+    # 人脸特征提取
+    face_feature = face_detector.encode_face_feature(face_img)
+    if face_feature is None:
+        return None;
 
     face = FaceInfo()
     face.format = IMAGE_FORMAT
@@ -45,15 +50,11 @@ def create_face_info(rawimage, userid, name):
     face.height = shape[1]
     face.channel = shape[2]
     face.facebytes = get_face_image_byte(face_img)
+    face.features = face_feature
     return face
 
-
+'''
 def create_face_feature(face):
-    '''
-    创建人脸特征数据对象
-    :param face: 人脸信息
-    :return: 人脸特征对象
-    '''
     if face.facebytes is None:
         return None;
 
@@ -73,7 +74,7 @@ def create_face_feature(face):
     feature.userid = face.userid
     feature.features = face_feature             # 人脸特征属性
     return feature
-
+'''
 
 class BaseHandler(tornado.web.RequestHandler, SessionMixin):
     def initialize(self):
@@ -201,9 +202,9 @@ class FaceRecognizeHandler(BaseHandler):
             return self.response_json(result)
 
         data = {}
-        data['id'] = feature.faceid
+        data['id'] = feature.id
         data['userid'] = feature.userid
-        data['name'] = 'test'
+        data['name'] = feature.name
         result = ok_data(data)
         return self.response_json(result)
 
@@ -241,16 +242,16 @@ class FaceRegistHandler(BaseHandler):
                 return self.response_json(result)
 
             if self.add_model(face):
-                #print('Face {}, {}, {}'.format(face.id, face.userid, face.name))
-                feature = create_face_feature(face)
-                if feature is None or not self.add_model(feature):
-                    print("There are no face detected in the image file or error occured when save feature.")
-                    result = failure("There are no face detected in the image file or error occured when save feature.")
-                    return self.response_json(result)
+                # print('Face {}, {}, {}'.format(face.id, face.userid, face.name))
+                # feature = create_face_feature(face)
+                # if feature is None or not self.add_model(feature):
+                #    print("There are no face detected in the image file or error occured when save feature.")
+                #    result = failure("There are no face detected in the image file or error occured when save feature.")
+                #    return self.response_json(result)
 
                 # print('Feature {}, {}, {}'.format(feature.id, feature.faceid, feature.userid))
                 # face.facebytes = None
-                face_recognizer.add_feature(feature)        #添加人脸特征数据
+                face_recognizer.add_feature(face)        #添加人脸特征数据
 
                 data = {}
                 data['id'] = face.id
