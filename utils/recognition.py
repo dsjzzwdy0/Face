@@ -119,7 +119,7 @@ class FaceRecognizer:
                 min_dist = dist[i]
                 index = i
 
-        if min_dist < self.tolerance :
+        if min_dist < self.tolerance and index > -1:
             return self.features[index]
         return None
 
