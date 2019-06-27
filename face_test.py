@@ -6,6 +6,7 @@ from utils import recognition
 import face_recognition
 from PIL import Image
 import matplotlib.pyplot as plt
+import time
 
 
 def test_for_face_database():
@@ -34,7 +35,12 @@ def test_for_face_find():
     plt.imshow(face_img)
     plt.show()'''
 
-    feature0 = face_recognition.face_encodings(face_img)[0]
+    start = time.time()
+    feature_list = face_recognition.face_encodings(face_img)
+    feature0 = feature_list[0]
+    end = time.time()
+    print('Encode face feature spend time is', (end - start))
+
     print(feature0)
     print ('Feature type is ', type(feature0))
     shape = feature0.shape
@@ -119,8 +125,8 @@ def test_for_face_find():
 
 def main():
     # test_for_face_recognition()
-    # test_for_face_find()
-    test_for_face_database()
+    test_for_face_find()
+    # test_for_face_database()
 
 
 if __name__ == '__main__':

@@ -76,6 +76,7 @@ def create_face_feature(face):
     return feature
 '''
 
+
 class BaseHandler(tornado.web.RequestHandler, SessionMixin):
     def initialize(self):
         self.db = dbSession
