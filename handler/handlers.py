@@ -1,6 +1,7 @@
 #-*- coding:utf-8 -*-
 import tornado.web
 import os
+import os.path
 from pycket.session import SessionMixin
 from models.result_warpper import *
 from models.face_info import *
@@ -53,6 +54,7 @@ def create_face_info(rawimage, userid, name):
     face.features = face_feature
     return face
 
+
 '''
 def create_face_feature(face):
     if face.facebytes is None:
@@ -104,20 +106,21 @@ class BaseHandler(tornado.web.RequestHandler, SessionMixin):
 class IndexHandler(BaseHandler):
     # 添加一个处理get请求方式的方法
     def get(self):
-        self.set_header("Content-Type", "image/png")
-        imagepath = os.path.join('d:/Python/images/maps.png')  # 图片路径
-        with open(imagepath, 'rb') as f:
-            image_data = f.read()
+        image = cv2.imread('d:/Python/images/person.jpg')  # 图片路径
 
-        # self.write('好看的皮囊千篇一律，有趣的灵魂万里挑一。')
-        self.write(image_data)
+        if image is None:
+            return self.write('好看的皮囊千篇一律，有趣的灵魂万里挑一。')
+        else:
+            self.set_header("Content-Type", "image/png")
+            bytes = get_cv2_byte_array(image)
+            self.write(bytes)
 
 
 class FaceHandler(BaseHandler):
     def get(self):
-        image = Image.open('d:/Python/images/maps.png')
+        image = Image.open('d:/Python/images/person.jpg')
         self.set_header("Content-Type", "image/png")
-        self.write(get_byte_array(image))
+        self.write(get_image_byte_array(image))
 
 
 class FacePicture(BaseHandler):
@@ -144,29 +147,18 @@ class FaceDetectHandler(BaseHandler):
         self.write('please upload a image url')
 
     def post(self):
-        upload_path = os.path.join("d:/index", 'files')  # 文件的暂存路径
+        meta = self.request.files['file'][0]  # 提取表单中‘name’为‘file’的文件元数据
+        if meta is None:
+            result = failure('There are no image file uploaded, please set the iamge file')
+            return self.response_json(result)
+
+        upload_path = os.path.join("d:/index", 'face/tempdir')  # 文件的暂存路径
         if not os.path.exists(upload_path):
             os.makedirs(upload_path)
 
-        file_metas = self.request.files['file']  # 提取表单中‘name’为‘file’的文件元数据
-        userid = self.get_query_argument("userid", "test")
-        name = self.get_query_argument("name", "test")
-        print("userid: ", userid, ", name: ", name)
+        bytes = meta['body']
 
-        for meta in file_metas:
-            filename = meta['filename']
-            print(filename)
-            filepath = os.path.join(upload_path, filename)
-            bytes = meta['body']
-            image = np.asarray(bytearray(bytes), dtype="uint8")
-            image = cv2.imdecode(image, 0)
-            sp = image.shape
-            channel = image.channels
-            print("图像长度:", sp[0], ", ", sp[1], ", Channel: ", channel)
 
-            with open(filepath, 'wb') as up:  # 有些文件需要已二进制的形式存储，实际中可以更改
-                up.write(meta['body'])
-            self.write('finished!')
 
 
 class MainHandler(BaseHandler):

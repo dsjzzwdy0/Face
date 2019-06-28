@@ -7,7 +7,13 @@ import face_recognition
 from PIL import Image
 import matplotlib.pyplot as plt
 import time
+from utils.file_utils import *
 
+
+def test_for_dir():
+    file = FileUtils("d:/index/tempdir")
+    path = file.get_new_file_path(".txt")
+    print(path)
 
 def test_for_face_database():
     recognition.FaceRecognizer()
@@ -41,6 +47,7 @@ def test_for_face_find():
     end = time.time()
     print('Encode face feature spend time is', (end - start))
 
+    '''
     print(feature0)
     print ('Feature type is ', type(feature0))
     shape = feature0.shape
@@ -49,6 +56,13 @@ def test_for_face_find():
 
     feature1 = np.frombuffer(bytes)
     print(feature1)
+    '''
+
+    start = time.time()
+    feature_list = face_recognition.face_encodings(face_img)
+    feature0 = feature_list[0]
+    end = time.time()
+    print('Encode face feature spend time is', (end - start))
 
 
     '''image_path = "images/trump2.png"
@@ -125,8 +139,10 @@ def test_for_face_find():
 
 def main():
     # test_for_face_recognition()
-    test_for_face_find()
+    # test_for_face_find()
     # test_for_face_database()
+    test_for_dir()
+
 
 
 if __name__ == '__main__':

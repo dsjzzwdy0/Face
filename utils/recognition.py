@@ -7,16 +7,33 @@ import numpy as np
 from models.face_info import *
 
 
-def get_byte_array(image, format='png'):
+def get_cv2_byte_array(image, format='png'):
+    '''
+    从cv2图像获得字节数组
+    :param image: cv2图像数据
+    :param format: 图像格式
+    :return: 字节数组
+    '''
+    if image is None:
+        return None
+    else:
+        img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        return get_image_byte_array(img, format)
+
+
+def get_image_byte_array(image, format='png'):
     '''
     将图像数据(这里是PIL Image格式)转存为字节数组
     :param image: 原始图像数据
     :param format: 图像格式，PNG就是图片格式，我试过换成JPG/jpg都不行
     :return: 字节数据
     '''
-    img_byte_arr = io.BytesIO()                     # 创建一个空的Bytes对象
-    image.save(img_byte_arr, format=format)         # PNG就是图片格式，我试过换成JPG/jpg都不行
-    return img_byte_arr.getvalue()                  # 这个就是保存的图片字节流
+    if image is None:
+        return None
+    else:
+        img_byte_arr = io.BytesIO()                     # 创建一个空的Bytes对象
+        image.save(img_byte_arr, format=format)         # PNG就是图片格式，我试过换成JPG/jpg都不行
+        return img_byte_arr.getvalue()                  # 这个就是保存的图片字节流
 
 
 def cv2_decode_byte_array(bytes):
@@ -49,7 +66,7 @@ def get_face_image_byte(face_image):
     :return: 字节数组数据
     '''
     face_img = Image.fromarray(cv2.cvtColor(face_image, cv2.COLOR_BGR2RGB))
-    return get_byte_array(face_img)
+    return get_image_byte_array(face_img)
 
 
 class FaceRecognizer:
@@ -146,6 +163,19 @@ class FaceDetector:
 
     def encode_face_feature(self, face_image):
         return face_recognition.face_encodings(face_image)[0]
+
+    def find_and_draw_face_locations(self, image):
+        locations = FaceDetector.find_face_locations(image)
+        size = len(locations)
+
+        if size <= 0:
+            return image
+
+        for face_location in locations:
+            (top, right, bottom, left) = face_location
+            cv2.rectangle(image, (int(left), int(top)), (int(right), int(bottom)), (0, 255, 0), 1)
+
+        return image
 
     def find_main_face_location(self, image):
         '''
