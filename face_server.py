@@ -7,7 +7,7 @@ from conf import settings
 from handler import handlers
 
 from models import engine
-from models.face_info import Base
+from models.models_def import Base
 
 define("tables", default=False, group="application", help="creat tables", type=bool)
 

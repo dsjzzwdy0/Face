@@ -11,9 +11,10 @@ from utils.file_utils import *
 
 
 def test_for_dir():
-    file = FileUtils("d:/index/tempdir")
+    file = FileUtils("d:/index/face/tempdir")
     path = file.get_new_file_path(".txt")
     print(path)
+
 
 def test_for_face_database():
     recognition.FaceRecognizer()
@@ -21,7 +22,7 @@ def test_for_face_database():
 
 def test_for_face_find():
     image_path = "images/trump2.png"
-    image = cv2.imread(image_path)
+    # image = cv2.imread(image_path)
 
     '''cv2.imshow("Faces", image)
     cv2.waitKey(0)
@@ -29,23 +30,23 @@ def test_for_face_find():
     '''
 
     face = FaceDetector()
-    face_img, shape = face.get_normalize_face(image)
+    image = face.find_and_draw_face_locations_path(image_path)
 
-    '''cv2.imshow("Faces", face_img)
+    cv2.imshow("Faces", image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    '''
 
     # face_img = Image.fromarray(cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB))
     '''plt.figure("dog")
     plt.imshow(face_img)
-    plt.show()'''
-
+    plt.show()
+    face_img, shape = face.get_normalize_face(image)
     start = time.time()
     feature_list = face_recognition.face_encodings(face_img)
     feature0 = feature_list[0]
     end = time.time()
     print('Encode face feature spend time is', (end - start))
+    '''
 
     '''
     print(feature0)
@@ -56,14 +57,14 @@ def test_for_face_find():
 
     feature1 = np.frombuffer(bytes)
     print(feature1)
-    '''
+    
 
     start = time.time()
     feature_list = face_recognition.face_encodings(face_img)
     feature0 = feature_list[0]
     end = time.time()
     print('Encode face feature spend time is', (end - start))
-
+    '''
 
     '''image_path = "images/trump2.png"
     print("test for face find: ", image_path)
@@ -139,9 +140,9 @@ def test_for_face_find():
 
 def main():
     # test_for_face_recognition()
-    # test_for_face_find()
+    test_for_face_find()
     # test_for_face_database()
-    test_for_dir()
+    # test_for_dir()
 
 
 

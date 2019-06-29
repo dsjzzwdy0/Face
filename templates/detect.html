@@ -1,0 +1,151 @@
+<html>
+<head>
+	<title>头像注册</title>
+	{% include 'inc/meta.html' %}
+</head>
+</head>
+<body>
+{% include 'inc/navi.html' %}
+<!--content-->
+<div class="container">
+    <div class="image_container jumbotron">
+        <h1>人脸检测</h1>
+    </div>
+    <div class="row">
+		<div class="col-sm-6 col-md-6" >
+			<div class="thumbnail" style="height: 610px;">
+				<form name="form0" enctype="multipart/form-data" method="post" id="form0" >
+					<div style="height:400px">
+						<img id="img0" style="height: 98%;" src="">
+					</div>
+					<div class="caption left">
+						<p><span></span><span><input type="text" id="userid" class="input_value" style="border: 0px; background-color: transparent;"/></span></p>
+						<p><span></span><span><input type="text" id="name" class="input_value" style="border: 0px; background-color: transparent;"/></span></p>
+                        <p><span><input type="file" name="file" id="file0" class="input_value"/></span></p>
+						<p><a class="btn btn-primary btn-block" role="button" onclick="doSubmitForm()" href="#">检测人脸</a></p>
+					</div>
+				</form>
+            </div>
+		</div>
+		<div class="col-sm-6 col-md-6">
+			<div class="thumbnail" style="height: 610px;">
+				<div style="height: 400px;">
+					<img id="img1" src="" style="height: 98%;">
+				</div>
+				<div class="caption left">
+					<p><span></span><span><input style="height: 26px; outline:none;background-color:transparent; border: 0px;" type="text" disabled="disabled"></input></span></p>
+					<p><span></span><span><input type="text" id="newuserid" style="border: 0px; background-color: transparent;"></input></span></p>
+					<p><span></span><span><input type="text" id="newname" style="display: inline;border: 0px; background-color: transparent;"></input></span></p>
+					<p><a class="btn btn-primary btn-block" role="button" href="#">人脸检测结果</a></p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% include 'inc/foot.html' %}
+</body>
+</html>
+<script type="text/javascript">
+
+function showInfo(face)
+{
+	$("#img1").attr("src", "detectpic?id=" + face.id)
+}
+
+function emptyResult()
+{
+	$("#img1").attr("src", "")
+}
+
+$("#file0").change(function(){
+	emptyResult();
+    var objUrl = getObjectURL(this.files[0]) ;
+    console.log("objUrl = "+objUrl) ;
+    if (objUrl) {
+        $("#img0").attr("src", objUrl) ;
+        AutoSize($('#img0'), 500, 400);
+    }
+});
+
+//建立一個可存取到該file的url
+function getObjectURL(file) {
+    var url = null ;
+    if (window.createObjectURL!=undefined) { // basic
+        url = window.createObjectURL(file) ;
+    } else if (window.URL!=undefined) { // mozilla(firefox)
+        url = window.URL.createObjectURL(file) ;
+    } else if (window.webkitURL!=undefined) { // webkit or chrome
+        url = window.webkitURL.createObjectURL(file) ;
+    }
+    return url ;
+}
+
+function doSubmitForm() {
+    var files = $('#file0').val();
+
+    //调用apicontroller后台action方法，将form数据传递给后台处理。contentType必须设置为false,否则chrome和firefox不兼容
+    if (files != '')
+    {
+        var formData = new FormData($("#form0")[0]);
+	    $.ajax({
+	    	url: "detect",	//url
+	        type: "POST",	//方法类型
+	        data: formData,
+	        async: false,
+            cache: false,
+            contentType: false,
+            processData: false,
+	        success: function (result)
+	        {
+	            console.log(result);//打印服务端返回的数据(调试用)
+	            if (result.status == 200)
+	            {
+	                showInfo(result.data);
+	            }
+	            else
+	            {
+	            	alert(result.msg)
+	            };
+	        },
+	        error : function() {
+	            alert("异常！");
+	        }
+	    });
+    }
+    else
+    {
+    	alert("请选择头像文件");
+    }
+}
+
+/******最完美解决 图片在图片框内按宽高比例自动缩放！！！***/
+//Img:要放图片的img元素，onload时传参可用this
+
+//maxHeight  :img元素的高度，像素（图片框 最大高度）
+
+//maxWidth:img元素的宽度，像素（图片框 最大宽度）
+function AutoSize(Img, maxWidth, maxHeight)
+{
+	var image = new Image();
+	//原图片原始地址（用于获取原图片的真实宽高，当<img>标签指定了宽、高时不受影响）
+	image.src = Img.src;
+	// 当图片比图片框小时不做任何改变
+	if (image.width < maxWidth && image.height < maxHeight)
+	{
+		Img.width = image.width;
+		Img.height = image.height;
+	}
+	else //原图片宽高比例 大于 图片框宽高比例,则以框的宽为标准缩放，反之以框的高为标准缩放
+	{
+		if (maxWidth/ maxHeight  <= image.width / image.height) //原图片宽高比例 大于 图片框宽高比例
+		{
+			Img.width = maxWidth;   //以框的宽度为标准
+			Img.height = maxWidth* (image.height / image.width);
+		}
+		else {   //原图片宽高比例 小于 图片框宽高比例
+			Img.width = maxHeight  * (image.width / image.height);
+			Img.height = maxHeight  ;   //以框的高度为标准
+		}
+	}
+}
+</script>

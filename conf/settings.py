@@ -6,6 +6,7 @@ from configparser import  ConfigParser
 conf_file = 'conf/conf.ini'
 conf = dict()
 
+
 def get_conf():
     size = len(conf)
     if size <= 0:
@@ -13,7 +14,8 @@ def get_conf():
         print('Load configuration file', conf_file)
         config = ConfigParser()
         config.read(conf_file, encoding='utf_8')
-        print(config.items('db'))
+        # print(config.items('db'))
+        # print ('Read server configuration information...')
 
         conf.update(config.items('db'))
         # config.dict(conf)

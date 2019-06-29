@@ -4,7 +4,7 @@ import cv2
 import io
 from PIL import Image
 import numpy as np
-from models.face_info import *
+from models.models_def import *
 
 
 def get_cv2_byte_array(image, format='png'):
@@ -88,8 +88,10 @@ class FaceRecognizer:
         从数据库中初始化人脸特征库
         :return:
         '''
-        print('从geoqs(face_feature_info)中初始化已知人脸数据库...')
+        print('Initialize known faces from database geoqs(face_info)...')
         feature_infos = self.db.query(FeatureInfo).all()
+        size = len(feature_infos)
+        print('There are {} know labels and faces in the database.'.format(size))
         for feature_into in feature_infos:
             self.add_feature(feature_into)
 
@@ -127,7 +129,7 @@ class FaceRecognizer:
         '''
         unknow_feature = self.face.encode_face_feature(unknow_image)
         dist = face_recognition.face_distance(self.know_faces, unknow_feature)
-        print(dist)
+        # print(dist)
 
         min_dist = 100000
         index = -1
@@ -164,7 +166,23 @@ class FaceDetector:
     def encode_face_feature(self, face_image):
         return face_recognition.face_encodings(face_image)[0]
 
+    def find_and_draw_face_locations_path(self, image_path):
+        '''
+        查找并把人脸的图像位置进行标示
+        :param image_path: 图像位置
+        :return: 标示之后的图像数据
+        '''
+        image = cv2.imread(image_path)
+        if image is None:
+            return None
+        return self.find_and_draw_face_locations(image)
+
     def find_and_draw_face_locations(self, image):
+        '''
+        查找并把人脸图像的位置用方框进行标示
+        :param image: 图像数据
+        :return: 标示之后的图像
+        '''
         locations = FaceDetector.find_face_locations(image)
         size = len(locations)
 

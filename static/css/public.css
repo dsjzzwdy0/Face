@@ -1,0 +1,36 @@
+.main{
+	text-align: center;
+	width:1000px;
+	margin:0 auto;
+}
+.input_value{
+	width: 300px;
+	margin-top: 5px;
+}
+.button_container
+{
+	height: 45px;
+	margin-top: 20px;
+}
+.input_container
+{
+	height: 35px;
+}
+.image_container
+{
+ 	margin-top: 20px;
+}
+
+.input_area{
+	width: 50%;
+	float: left;
+}
+.result_area
+{
+	width: 50%;
+	float: right;
+}
+
+#img0{
+	width: 80%;
+}
