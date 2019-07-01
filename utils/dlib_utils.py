@@ -70,6 +70,7 @@ def face_locations(img, number_of_times_to_upsample=1, model="hog"):
     else:
         return [_trim_css_to_bounds(_rect_to_css(face), img.shape) for face in _raw_face_locations(img, number_of_times_to_upsample, model)]
 
+
 def _raw_face_locations(img, number_of_times_to_upsample=1, model="hog"):
     """
     Returns an array of bounding boxes of human faces in a image
