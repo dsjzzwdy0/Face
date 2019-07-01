@@ -9,3 +9,4 @@ output
 data
 dist
 build
+conf/models

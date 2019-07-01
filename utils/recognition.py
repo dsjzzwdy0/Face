@@ -1,5 +1,5 @@
 # coding=utf-8
-import face_recognition
+from utils import dlib_utils
 import cv2
 import io
 from PIL import Image
@@ -128,7 +128,7 @@ class FaceRecognizer:
         :return:
         '''
         unknow_feature = self.face.encode_face_feature(unknow_image)
-        dist = face_recognition.face_distance(self.know_faces, unknow_feature)
+        dist = dlib_utils.face_distance(self.know_faces, unknow_feature)
         # print(dist)
 
         min_dist = 100000
@@ -161,10 +161,10 @@ class FaceDetector:
         :param image: 图像数据
         :return: 人脸所在图像的位置,位置是一个列表
         '''
-        return face_recognition.face_locations(image)
+        return dlib_utils.face_locations(image)
 
     def encode_face_feature(self, face_image):
-        return face_recognition.face_encodings(face_image)[0]
+        return dlib_utils.face_encodings(face_image)[0]
 
     def find_and_draw_face_locations_path(self, image_path):
         '''

@@ -1,6 +1,7 @@
 # coding=utf-8
 from utils.recognition import FaceDetector
 import cv2
+import os
 import numpy as np
 from utils import recognition
 import face_recognition
@@ -24,7 +25,8 @@ def test_for_face_find():
     image_path = "images/trump2.png"
     # image = cv2.imread(image_path)
 
-    '''cv2.imshow("Faces", image)
+    '''
+    cv2.imshow("Faces", image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     '''
@@ -139,6 +141,10 @@ def test_for_face_find():
     '''
 
 def main():
+    # print("__file Output:",__file__)
+    # print("File execute path: ", os.path.split(os.path.realpath(__file__))[0])
+    print("File execute path: ", os.path.dirname(__file__))
+    # print("Name execute path: ", os.getcwd())
     # test_for_face_recognition()
     test_for_face_find()
     # test_for_face_database()
