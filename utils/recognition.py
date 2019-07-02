@@ -5,6 +5,7 @@ import io
 from PIL import Image
 import numpy as np
 from models.models_def import *
+from utils.log import *
 
 
 def get_cv2_byte_array(image, format='png'):
@@ -88,10 +89,10 @@ class FaceRecognizer:
         从数据库中初始化人脸特征库
         :return:
         '''
-        print('Initialize known faces from database geoqs(face_info)...')
+        logger.info('Initialize known faces from database geoqs(face_info)...')
         feature_infos = self.db.query(FeatureInfo).all()
         size = len(feature_infos)
-        print('There are {} know labels and faces in the database.'.format(size))
+        logger.info('There are {} know labels and faces in the database.'.format(size))
         for feature_into in feature_infos:
             self.add_feature(feature_into)
 

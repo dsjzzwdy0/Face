@@ -5,6 +5,7 @@ import tornado.ioloop
 import os
 from conf import settings
 from handler import handlers
+from utils.log import *
 
 from models import engine
 from models.models_def import Base
@@ -43,7 +44,7 @@ def init_tornado_app():
         template_path = template_path
     )
 
-    print('Start server listening at port ', port)
+    logger.info('Start server listening at port {}'.format(port))
     # 绑定一个监听端口
     app.listen(port)
     return app

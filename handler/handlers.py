@@ -11,6 +11,7 @@ from models.models_def import *
 from utils.recognition import *
 from utils.file_utils import *
 from conf import settings
+from utils.log import *
 
 
 WIDTH = 128
@@ -22,7 +23,7 @@ tmp_path = settings.get_conf()['temp_path']
 if str.strip(tmp_path) == '':
     tmp_path = 'd:/index/face/tempdir'                  # 文件存储的路径
 file_utils = FileUtils(tmp_path)
-print('The server use the path "', tmp_path, '" to store the temp files.')
+logger.info('The server use the path "' + tmp_path + '" to store temp files.')
 
 
 def get_image_content_type(format):
@@ -322,14 +323,14 @@ class FaceRecognizeHandler(BaseHandler):
         bytes = meta['body']
         image = cv2_decode_byte_array(bytes)
         if image is None:
-            print("Failure image data")
+            logger.warning("Failure image data")
             result = failure("Failure image data")
             return self.response_json(result)
 
         # 识别人脸
         feature = face_recognizer.predict(image)
         if feature is None:
-            print("Failure to predict the face image.")
+            logger.warning("Failure to predict the face image.")
             result = failure("Failure to predict the face image.")
             return self.response_json(result)
 
@@ -364,13 +365,13 @@ class FaceRegistHandler(BaseHandler):
         '''
         image = cv2_decode_byte_array(bytes)
         if image is None:
-            print("Failure image data")
+            logger.warning("Failure image data")
             result = failure("Failure image data")
             return self.response_json(result)
 
         face = create_face_info(image, userid, name)
         if face is None:
-            print("There are no face detected in the image file")
+            logger.warning("There are no face detected in the image file")
             result = failure("There are no face detected in the image file")
             return self.response_json(result)
 

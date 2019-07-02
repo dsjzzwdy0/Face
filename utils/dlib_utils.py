@@ -1,13 +1,9 @@
 #-*- coding:utf-8 -*-
-
-import sys
 import os
 import dlib
 import numpy as np
+from conf import *
 
-
-path = os.path.dirname(os.path.realpath(sys.argv[0]))
-print('System execute path: ', path)
 
 model_68_point_path = os.path.join(path, 'conf/models/shape_predictor_68_face_landmarks.dat')
 

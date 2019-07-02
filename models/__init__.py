@@ -15,17 +15,17 @@ import pymysql
 conf = settings.get_conf()
 
 HOSTNAME = conf['server']
-PORT = '3306'
+DBPORT = conf['dbport']
 DATABASE = conf["dbname"]
 USERNAME = conf['user']
 PASSWORD = conf['password']
 
 # DB_URI的格式：dialect（mysql/sqlite）+driver://username:password@host:port/database?charset=utf8
-DB_URI = 'mysql+pymysql://{}:{}@{}:{}/{}?charset=utf8'.format(USERNAME, PASSWORD, HOSTNAME, PORT, DATABASE)
+DB_URI = 'mysql+pymysql://{}:{}@{}:{}/{}?charset=utf8'.format(USERNAME, PASSWORD, HOSTNAME, DBPORT, DATABASE)
 
 
 # 创建引擎
-engine = create_engine(DB_URI, echo=False )
+engine = create_engine(DB_URI, echo=False, pool_recycle=3600)
 
 # sessionmaker生成一个session类
 Session = sessionmaker(bind=engine)

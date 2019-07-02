@@ -49,14 +49,16 @@
 
 function showInfo(face)
 {
-	$("#newuserid").val(face.userid)
-	$("#newname").val(face.name)
-	$("#img1").attr("src", "getpic?id=" + face.id)
+	$("#newuserid").val(face.userid);
+	$("#newname").val(face.name);
+	$("#img1").attr("src", "getpic?id=" + face.id);
 }
 
 function emptyResult()
 {
-	$("#img1").attr("src", "")
+	$("#newuserid").val('');
+	$("#newname").val('');
+	$("#img1").attr("src", "");
 }
 
 $("#file0").change(function(){
